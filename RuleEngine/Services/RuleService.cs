@@ -15,23 +15,28 @@ public class RuleService
         _logger = logger;
     }
 
-    public RuleEvaluationResponseDto Evaluate(Dictionary<string, object> request)
+    public RuleEvaluationResponseDto Evaluate(RuleEvaluationRequestDto request)
     {
-        var targetType = FieldResolver.Resolve(request, "targetType")?.ToString();
-        var targetCode = FieldResolver.Resolve(request, "targetCode")?.ToString();
+        if (request == null)
+        {
+            throw new RuleEngineException("Request cannot be null");
+        }
 
-        if (string.IsNullOrWhiteSpace(targetType) || string.IsNullOrWhiteSpace(targetCode))
-            throw new RuleEngineException("targetType and targetCode are required");
+        if (request.Data == null ||
+            string.IsNullOrWhiteSpace(request.ApplicationId) || 
+            string.IsNullOrWhiteSpace(request.TargetType) || string.IsNullOrWhiteSpace(request.TargetCode))
+            throw new RuleEngineException("applicationId, targetType, targetCode, and data are required");
 
-        _logger.LogInformation("Evaluating rules for {TargetType}/{TargetCode}", targetType, targetCode);
-
-        var context = _engine.Evaluate(targetType, targetCode, request);
+        _logger.LogInformation("Evaluating rules for {TargetType}/{TargetCode}", request.TargetType, request.TargetCode);
+        var applicationId = Guid.Parse(request.ApplicationId);
+        var context = _engine.Evaluate(applicationId, request.TargetType, request.TargetCode, request.Data);
 
         return new RuleEvaluationResponseDto
         {
             RequestId = context.RequestId,
-            TargetType = targetType,
-            TargetCode = targetCode,
+            ApplicationId = request.ApplicationId.ToString(),
+            TargetType = request.TargetType,
+            TargetCode = request.TargetCode,
             Valid = !context.HasViolations,
             HasErrors = context.HasErrors,
             ErrorMessage = context.HasErrors
@@ -43,6 +48,7 @@ public class RuleService
     }
 
     public void EvictAll() => _engine.EvictAll();
-    public void EvictByTarget(string targetType, string targetCode) => _engine.EvictByTarget(targetType, targetCode);
+    public void EvictByApplication(string applicationId) => _engine.EvictByApplication(applicationId);
+    //public void EvictByTarget(string targetType, string targetCode) => _engine.EvictByTarget(targetType, targetCode);
     public void EvictByRuleId(string ruleId) => _engine.EvictByRuleId(ruleId);
 }

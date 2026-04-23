@@ -6,6 +6,7 @@ namespace RuleEngine.DTOs;
 public class RuleEvaluationResponseDto
 {
     public string? RequestId { get; set; }
+    public string? ApplicationId { get; set; }
     public string? TargetType { get; set; }
     public string? TargetCode { get; set; }
     public bool Valid { get; set; }

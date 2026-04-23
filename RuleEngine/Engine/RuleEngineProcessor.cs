@@ -37,7 +37,7 @@ public class RuleEngineProcessor
         _logger = logger;
     }
 
-    public RuleContext Evaluate(string targetType, string targetCode, Dictionary<string, object> data)
+    public RuleContext Evaluate(Guid applicationId, string targetType, string targetCode, Dictionary<string, object> data)
     {
         var context = new RuleContext(data)
         {
@@ -45,12 +45,12 @@ public class RuleEngineProcessor
             TargetCode = targetCode
         };
 
-        var cacheKey = $"rules:{targetType}:{targetCode}";
+        var cacheKey = $"rules:{applicationId}";
         var rules = _cache.GetOrCreate(cacheKey, entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = CacheDuration;
             return _db.RuleAssignmentViews
-                .Where(r => r.TargetType == targetType && r.TargetCode == targetCode
+                .Where(r => r.ApplicationId == applicationId && r.TargetType == targetType && r.TargetCode == targetCode
                             && r.IsActived && !r.IsDeleted)
                 .OrderBy(r => r.Priority)
                 .ToList();
@@ -230,11 +230,17 @@ public class RuleEngineProcessor
         _logger.LogInformation("All rule caches cleared");
     }
 
-    public void EvictByTarget(string targetType, string targetCode)
+    public void EvictByApplication(string applicationId)
     {
-        _cache.Remove($"rules:{targetType}:{targetCode}");
-        _logger.LogInformation("Cache evicted for {TargetType}/{TargetCode}", targetType, targetCode);
+        _cache.Remove($"rules:{applicationId}");
+        _logger.LogInformation("Cache evicted for {ApplicationId}", applicationId);
     }
+
+    //public void EvictByTarget(string applicationId, string targetType, string targetCode)
+    //{
+    //    _cache.Remove($"rules:{applicationId}:{targetType}:{targetCode}");
+    //    _logger.LogInformation("Cache evicted for {ApplicationId}/{TargetType}/{TargetCode}", applicationId, targetType, targetCode);
+    //}
 
     public void EvictByRuleId(string ruleId)
     {

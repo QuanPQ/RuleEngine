@@ -8,16 +8,18 @@ public class RuleExceptionMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<RuleExceptionMiddleware> _logger;
+    private readonly bool _isDevelopment;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public RuleExceptionMiddleware(RequestDelegate next, ILogger<RuleExceptionMiddleware> logger)
+    public RuleExceptionMiddleware(RequestDelegate next, ILogger<RuleExceptionMiddleware> logger, IHostEnvironment env)
     {
         _next = next;
         _logger = logger;
+        _isDevelopment= env.IsDevelopment();
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -51,7 +53,9 @@ public class RuleExceptionMiddleware
                 RequestId = requestId,
                 Valid = false,
                 HasErrors = true,
-                ErrorMessage = $"Rule evaluation encountered an internal error. Please contact support with requestId: {requestId}",
+                ErrorMessage = _isDevelopment
+                    ? $"Rule evaluation error: [{ex.GetType().Name}] {ex.Message} (requestId: {requestId})"
+                    : $"Rule evaluation encountered an internal error. Please contact support with requestId: {requestId}",
                 Violations = new()
             };
             await context.Response.WriteAsync(JsonSerializer.Serialize(response, JsonOptions));

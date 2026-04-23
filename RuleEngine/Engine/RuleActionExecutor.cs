@@ -57,7 +57,7 @@ public class RuleActionExecutor
                 ? ResolveMessage(action.Message, context.Data)
                 : $"Field '{action.Field}' is required";
             var metadata = BuildMetadata(action, context);
-            context.Violations.Add(new RuleViolation(ruleId, action.ErrorCode, message, metadata));
+            context.Violations.Add(new RuleViolation(ruleId, action.ErrorCode, action.Type.ToString(), message, metadata));
         }
         return null;
     }
@@ -66,7 +66,7 @@ public class RuleActionExecutor
     {
         var message = ResolveMessage(action.Message, context.Data);
         var metadata = BuildMetadata(action, context);
-        context.Violations.Add(new RuleViolation(ruleId, action.ErrorCode, message, metadata));
+        context.Violations.Add(new RuleViolation(ruleId, action.ErrorCode, action.Type.ToString(), message, metadata));
         return null;
     }
 

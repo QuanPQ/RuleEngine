@@ -16,7 +16,7 @@ public class RulesController : ControllerBase
     }
 
     [HttpPost("evaluate")]
-    public ActionResult<RuleEvaluationResponseDto> Evaluate([FromBody] Dictionary<string, object> request)
+    public ActionResult<RuleEvaluationResponseDto> Evaluate([FromBody] RuleEvaluationRequestDto request)
     {
         return Ok(_ruleService.Evaluate(request));
     }
@@ -28,12 +28,19 @@ public class RulesController : ControllerBase
         return Ok(new { message = "All rule caches cleared" });
     }
 
-    [HttpDelete("cache/target/{targetType}/{targetCode}")]
-    public IActionResult EvictByTarget(string targetType, string targetCode)
+    [HttpDelete("cache/application/{applicationId}")]
+    public IActionResult EvictByApplication(string applicationId)
     {
-        _ruleService.EvictByTarget(targetType, targetCode);
-        return Ok(new { message = $"Cache cleared for {targetType}/{targetCode}" });
+        _ruleService.EvictByApplication(applicationId);
+        return Ok(new { message = $"Cache cleared for applicationId: {applicationId}" });
     }
+
+    //[HttpDelete("cache/target/{targetType}/{targetCode}")]
+    //public IActionResult EvictByTarget(string targetType, string targetCode)
+    //{
+    //    _ruleService.EvictByTarget(targetType, targetCode);
+    //    return Ok(new { message = $"Cache cleared for {targetType}/{targetCode}" });
+    //}
 
     [HttpDelete("cache/rule/{ruleId}")]
     public IActionResult EvictByRuleId(string ruleId)
